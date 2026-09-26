@@ -27,9 +27,6 @@ python manage.py runserver       # http://127.0.0.1:8000/api/
 
 Teste rápido: abra `http://127.0.0.1:8000/api/` — a raiz navegável do DRF.
 
-> Depois que a Frente 3 criar o model `Produto`, rode
-> `python manage.py makemigrations` e `python manage.py migrate` de novo.
-
 ### Rodar os testes
 
 ```bash
@@ -47,12 +44,12 @@ loja-api/
 │   ├── settings.py         # DRF, banco, .env, paginação
 │   └── urls.py             # inclui as rotas da API sob /api/
 └── core/                   # o app do domínio
-    ├── models.py           # Categoria (feito) · Produto (Frente 3)
+    ├── models.py           # Categoria e Produto (feitos)
     ├── serializers.py      # validação + JSON
     ├── views.py            # CRUD - ViewSets
     ├── urls.py             # router do DRF (registra os ViewSets)
     ├── tests.py            # testes de API
-    └── migrations/         # 0001_initial: Categoria
+    └── migrations/         # 0001: Categoria · 0002: Produto + relacionamento
 ```
 
 ## Endpoints
@@ -89,14 +86,57 @@ Resposta da lista (paginação nativa do DRF, `PAGE_SIZE = 10`):
 
 ### Produto — `/api/produtos/` (Frente 3)
 
-Ainda não implementado.
+| Método | Rota                    | O que faz            | Status          |
+|--------|-------------------------|----------------------|-----------------|
+| GET    | `/api/produtos/`       | lista (paginada, 10) | 200             |
+| POST   | `/api/produtos/`       | cria                 | 201 · 400       |
+| GET    | `/api/produtos/{id}/`  | detalha              | 200 · 404       |
+| PUT    | `/api/produtos/{id}/`  | substitui (completo) | 200 · 400 · 404 |
+| PATCH  | `/api/produtos/{id}/`  | altera campos soltos | 200 · 400 · 404 |
+| DELETE | `/api/produtos/{id}/`  | remove               | 204 · 404       |
+
+Na escrita, envie o relacionamento pelo campo `categoria_id`:
+
+```json
+{
+  "nome": "Notebook Pro",
+  "descricao": "Notebook para trabalho",
+  "preco": "4999.90",
+  "estoque": 8,
+  "categoria_id": 1
+}
+```
+
+Na leitura, a categoria é retornada de forma aninhada:
+
+```json
+{
+  "id": 1,
+  "nome": "Notebook Pro",
+  "descricao": "Notebook para trabalho",
+  "preco": "4999.90",
+  "estoque": 8,
+  "categoria": {
+    "id": 1,
+    "nome": "Notebooks",
+    "descricao": "Portáteis e ultrabooks"
+  }
+}
+```
+
+Filtros disponíveis na listagem:
+
+- `?categoria=1` filtra pelo ID da categoria;
+- `?search=notebook` busca em nome/descrição do produto e nome da categoria;
+- `?ordering=preco` ordena por nome, preço ou estoque (prefixe com `-` para ordem decrescente);
+- `?page=2` navega entre páginas de 10 itens.
 
 
 ## Divisão do trabalho
 
 - **Frente 1 — Fundação/Infra:** este esqueleto (feito). Projeto, app, settings, DRF, .env, paginação.
 - **Frente 2 — Categoria:** model, ModelSerializer, ViewSet e registro no router — CRUD em `/api/categorias/` (feito).
-- **Frente 3 — Produto:** model com `ForeignKey`, migração do relacionamento, serializer aninhado, CRUD em `/api/produtos/`.
+- **Frente 3 — Produto:** model com `ForeignKey`, migração do relacionamento, serializer aninhado, CRUD em `/api/produtos/` (feito).
 - **Frente 4 — Roteamento, status codes e entrega:** router geral, códigos HTTP, integridade no DELETE, coleção Postman, revisão final.
 
-Onde cada frente pluga está marcado com comentários em `core/models.py`, `serializers.py`, `views.py` e `urls.py`.
+As implementações das frentes ficam organizadas em `core/models.py`, `serializers.py`, `views.py` e `urls.py`.

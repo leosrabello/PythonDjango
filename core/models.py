@@ -21,13 +21,23 @@ class Categoria(models.Model):
         return self.nome
 
 
-# Frente 3 (Produto) com o relacionamento 1:N:
-#     class Produto(models.Model):
-#         categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT,
-#                                       related_name="produtos")
-#         nome = models.CharField(max_length=120)
-#         descricao = models.TextField(blank=True)
-#         preco = models.DecimalField(max_digits=10, decimal_places=2)
-#         estoque = models.IntegerField(default=0)
-#
-# Depois de criar/alterar models: python manage.py makemigrations && migrate
+class Produto(models.Model):
+    """Produto pertencente a uma categoria da loja."""
+
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT,
+        related_name="produtos",
+    )
+    nome = models.CharField(max_length=120)
+    descricao = models.TextField(blank=True)
+    preco = models.DecimalField(max_digits=10, decimal_places=2)
+    estoque = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["nome"]
+        verbose_name = "produto"
+        verbose_name_plural = "produtos"
+
+    def __str__(self):
+        return self.nome

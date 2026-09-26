@@ -3,7 +3,7 @@
 
 from rest_framework import serializers
 
-from .models import Categoria
+from .models import Categoria, Produto
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -21,12 +21,40 @@ class CategoriaSerializer(serializers.ModelSerializer):
         return nome
 
 
-# Frente 3 (Produto) com serializer ANINHADO (mostra a categoria dentro do produto):
-#     class ProdutoSerializer(serializers.ModelSerializer):
-#         categoria = CategoriaSerializer(read_only=True)          # leitura: aninhado
-#         categoria_id = serializers.PrimaryKeyRelatedField(       # escrita: só o id
-#             queryset=Categoria.objects.all(), source="categoria", write_only=True)
-#         class Meta:
-#             model = Produto
-#             fields = ["id", "nome", "descricao", "preco", "estoque",
-#                       "categoria", "categoria_id"]
+class ProdutoSerializer(serializers.ModelSerializer):
+    """Exibe a categoria completa e recebe seu ID nas operações de escrita."""
+
+    categoria = CategoriaSerializer(read_only=True)
+    categoria_id = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.all(),
+        source="categoria",
+        write_only=True,
+    )
+
+    class Meta:
+        model = Produto
+        fields = [
+            "id",
+            "nome",
+            "descricao",
+            "preco",
+            "estoque",
+            "categoria",
+            "categoria_id",
+        ]
+
+    def validate_nome(self, value):
+        nome = value.strip()
+        if not nome:
+            raise serializers.ValidationError("O nome não pode ficar em branco.")
+        return nome
+
+    def validate_preco(self, value):
+        if value < 0:
+            raise serializers.ValidationError("O preço não pode ser negativo.")
+        return value
+
+    def validate_estoque(self, value):
+        if value < 0:
+            raise serializers.ValidationError("O estoque não pode ser negativo.")
+        return value
