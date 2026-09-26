@@ -1,6 +1,7 @@
 # As views expõem o CRUD. Opção escolhida: ModelViewSet (o DRF gera os 6
 # verbos automaticamente e o DefaultRouter cria as URLs).
 
+from django.db.models.deletion import ProtectedError
 from rest_framework import filters, viewsets
 from rest_framework.exceptions import ValidationError
 
@@ -17,6 +18,15 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+
+    def perform_destroy(self, instance):
+        """Preserva categorias referenciadas e traduz conflito para HTTP 400."""
+        try:
+            instance.delete()
+        except ProtectedError as exc:
+            raise ValidationError(
+                {"detail": "Não é possível excluir uma categoria que possui produtos."}
+            ) from exc
 
 
 class ProdutoViewSet(viewsets.ModelViewSet):

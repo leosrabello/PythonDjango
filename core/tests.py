@@ -8,6 +8,21 @@ from rest_framework.test import APITestCase
 from .models import Categoria, Produto
 
 
+class RoteamentoAPITests(APITestCase):
+    def test_raiz_redireciona_para_api(self):
+        resposta = self.client.get("/")
+
+        self.assertEqual(resposta.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(resposta["Location"], "/api/")
+
+    def test_raiz_da_api_exibe_rotas_do_default_router(self):
+        resposta = self.client.get("/api/")
+
+        self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+        self.assertIn("categorias", resposta.data)
+        self.assertIn("produtos", resposta.data)
+
+
 class CategoriaAPITests(APITestCase):
     url = "/api/categorias/"
 
@@ -77,6 +92,19 @@ class CategoriaAPITests(APITestCase):
         self.assertEqual(resposta.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Categoria.objects.count(), 0)
 
+    def test_delete_categoria_com_produtos_devolve_400_e_preserva_registros(self):
+        Produto.objects.create(
+            nome="Notebook Pro",
+            preco=Decimal("4999.90"),
+            categoria=self.categoria,
+        )
+
+        resposta = self.client.delete(f"{self.url}{self.categoria.id}/")
+
+        self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(Categoria.objects.filter(id=self.categoria.id).exists())
+        self.assertTrue(Produto.objects.filter(categoria=self.categoria).exists())
+
     def test_delete_inexistente_da_404(self):
         resposta = self.client.delete(f"{self.url}999/")
         self.assertEqual(resposta.status_code, status.HTTP_404_NOT_FOUND)
@@ -105,6 +133,11 @@ class ProdutoAPITests(APITestCase):
         self.assertEqual(produto["categoria"]["id"], self.notebooks.id)
         self.assertEqual(produto["categoria"]["nome"], "Notebooks")
         self.assertNotIn("categoria_id", produto)
+
+    def test_detalhe_inexistente_da_404(self):
+        resposta = self.client.get(f"{self.url}999/")
+
+        self.assertEqual(resposta.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_criar_com_categoria_id_devolve_categoria_aninhada(self):
         resposta = self.client.post(

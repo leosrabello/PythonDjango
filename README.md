@@ -25,7 +25,7 @@ python manage.py migrate
 python manage.py runserver       # http://127.0.0.1:8000/api/
 ```
 
-Teste rápido: abra `http://127.0.0.1:8000/api/` — a raiz navegável do DRF.
+Teste rápido: abra `http://127.0.0.1:8000/api/` — a raiz navegável do `DefaultRouter`, com links para categorias e produtos.
 
 ### Rodar os testes
 
@@ -63,7 +63,9 @@ loja-api/
 | GET    | `/api/categorias/{id}/`  | detalha              | 200 · 404            |
 | PUT    | `/api/categorias/{id}/`  | substitui (completo) | 200 · 400 · 404      |
 | PATCH  | `/api/categorias/{id}/`  | altera campos soltos | 200 · 400 · 404      |
-| DELETE | `/api/categorias/{id}/`  | remove               | 204 · 404            |
+| DELETE | `/api/categorias/{id}/`  | remove se não houver produtos | 204 · 400 · 404 |
+
+O relacionamento usa `on_delete=PROTECT`: uma categoria com produtos não pode ser removida. Nesse caso a API responde `400` com uma mensagem explicativa; apague ou mova os produtos antes de tentar novamente.
 
 Corpo do POST/PUT (`descricao` é opcional; `nome` é obrigatório e único):
 
@@ -131,12 +133,25 @@ Filtros disponíveis na listagem:
 - `?ordering=preco` ordena por nome, preço ou estoque (prefixe com `-` para ordem decrescente);
 - `?page=2` navega entre páginas de 10 itens.
 
+### Status HTTP
+
+- `200 OK`: consultas e atualizações bem-sucedidas (`GET`, `PUT`, `PATCH`);
+- `201 Created`: criação bem-sucedida (`POST`);
+- `204 No Content`: exclusão bem-sucedida (`DELETE`);
+- `400 Bad Request`: payload/filtro inválido ou tentativa de excluir categoria protegida;
+- `404 Not Found`: recurso solicitado não existe;
+- `500 Internal Server Error`: falha inesperada no servidor; não representa um resultado normal da API.
+
+### Coleção Postman/Insomnia
+
+Importe `postman/Loja de Eletrônicos API.postman_collection.json` no Postman ou Insomnia. A coleção cobre a raiz `/api/`, CRUD de categorias e produtos, filtro, busca, ordenação, paginação e exemplos de `400`/`404`. Execute os requests na ordem apresentada: ela cria registros de teste, verifica que `PROTECT` barra a exclusão de categoria e, em seguida, exclui primeiro o produto e depois a categoria. A variável `baseUrl` pode ser alterada para apontar para outra instância.
+
 
 ## Divisão do trabalho
 
 - **Frente 1 — Fundação/Infra:** este esqueleto (feito). Projeto, app, settings, DRF, .env, paginação.
 - **Frente 2 — Categoria:** model, ModelSerializer, ViewSet e registro no router — CRUD em `/api/categorias/` (feito).
 - **Frente 3 — Produto:** model com `ForeignKey`, migração do relacionamento, serializer aninhado, CRUD em `/api/produtos/` (feito).
-- **Frente 4 — Roteamento, status codes e entrega:** router geral, códigos HTTP, integridade no DELETE, coleção Postman, revisão final.
+- **Frente 4 — Roteamento, status codes e entrega:** concluída — `DefaultRouter` incluído sob `/api/`, status HTTP semânticos, integridade `PROTECT`, coleção Postman/Insomnia e documentação revisada.
 
 As implementações das frentes ficam organizadas em `core/models.py`, `serializers.py`, `views.py` e `urls.py`.

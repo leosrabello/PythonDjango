@@ -1,0 +1,109 @@
+{
+  "info": {
+    "_postman_id": "e45d0e4e-e4de-4a8d-aad6-993da3b84dc1",
+    "name": "Loja de Eletrônicos API",
+    "description": "Coleção completa do CRUD de categorias e produtos. Execute em sequência. Compatível com importação no Postman e no Insomnia.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "categoriaId", "value": "" },
+    { "key": "produtoId", "value": "" },
+    { "key": "nomeCategoria", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Raiz da API",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/" }
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Listar categorias",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/categorias/" }
+        },
+        {
+          "name": "Criar categoria",
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["pm.collectionVariables.set('nomeCategoria', 'Categoria Postman ' + Date.now());"] } }, { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Categoria criada (201)', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('categoriaId', pm.response.json().id);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nome\": \"{{nomeCategoria}}\",\n  \"descricao\": \"Categoria criada pela coleção\"\n}" }, "url": "{{baseUrl}}/api/categorias/" }
+        },
+        {
+          "name": "Detalhar categoria",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/categorias/{{categoriaId}}/" }
+        },
+        {
+          "name": "Substituir categoria (PUT)",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nome\": \"{{nomeCategoria}} Atualizada\",\n  \"descricao\": \"Atualizada por PUT\"\n}" }, "url": "{{baseUrl}}/api/categorias/{{categoriaId}}/" }
+        },
+        {
+          "name": "Alterar categoria (PATCH)",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"descricao\": \"Atualizada por PATCH\"\n}" }, "url": "{{baseUrl}}/api/categorias/{{categoriaId}}/" }
+        },
+        {
+          "name": "Categoria inexistente (espera 404)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/categorias/999999/" }
+        }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "item": [
+        {
+          "name": "Listar produtos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/" }
+        },
+        {
+          "name": "Criar produto",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Produto criado (201)', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('produtoId', pm.response.json().id);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Notebook de teste\",\n  \"descricao\": \"Criado pela coleção\",\n  \"preco\": \"4999.90\",\n  \"estoque\": 8,\n  \"categoria_id\": {{categoriaId}}\n}" }, "url": "{{baseUrl}}/api/produtos/" }
+        },
+        {
+          "name": "Detalhar produto",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/{{produtoId}}/" }
+        },
+        {
+          "name": "Substituir produto (PUT)",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Notebook de teste atualizado\",\n  \"descricao\": \"Atualizado por PUT\",\n  \"preco\": \"4899.90\",\n  \"estoque\": 7,\n  \"categoria_id\": {{categoriaId}}\n}" }, "url": "{{baseUrl}}/api/produtos/{{produtoId}}/" }
+        },
+        {
+          "name": "Alterar produto (PATCH)",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"estoque\": 6\n}" }, "url": "{{baseUrl}}/api/produtos/{{produtoId}}/" }
+        },
+        {
+          "name": "Filtrar por categoria",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/?categoria={{categoriaId}}" }
+        },
+        {
+          "name": "Buscar produtos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/?search=Notebook" }
+        },
+        {
+          "name": "Ordenar produtos por preço",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/?ordering=preco" }
+        },
+        {
+          "name": "Paginar produtos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/?page=1" }
+        },
+        {
+          "name": "Excluir categoria com produto (espera 400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Categoria protegida (400)', function () { pm.response.to.have.status(400); });"] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/categorias/{{categoriaId}}/" }
+        },
+        {
+          "name": "Excluir produto",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/produtos/{{produtoId}}/" }
+        },
+        {
+          "name": "Excluir categoria",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/categorias/{{categoriaId}}/" }
+        },
+        {
+          "name": "Produto inexistente (espera 404)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/produtos/999999/" }
+        }
+      ]
+    }
+  ]
+}
