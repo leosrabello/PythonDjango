@@ -27,8 +27,14 @@ python manage.py runserver       # http://127.0.0.1:8000/api/
 
 Teste rápido: abra `http://127.0.0.1:8000/api/` — a raiz navegável do DRF.
 
-> Depois que as Frentes 2 e 3 criarem os models, rode
+> Depois que a Frente 3 criar o model `Produto`, rode
 > `python manage.py makemigrations` e `python manage.py migrate` de novo.
+
+### Rodar os testes
+
+```bash
+python manage.py test core
+```
 
 ## Estrutura
 
@@ -41,16 +47,55 @@ loja-api/
 │   ├── settings.py         # DRF, banco, .env, paginação
 │   └── urls.py             # inclui as rotas da API sob /api/
 └── core/                   # o app do domínio
-    ├── models.py           # entidades (Frentes 2 e 3)
-    ├── serializers.py      # validação + JSON (Frentes 2 e 3)
-    ├── views.py            # CRUD - ViewSets (Frentes 2 e 3)
-    └── urls.py             # router do DRF (registra os ViewSets)
+    ├── models.py           # Categoria (feito) · Produto (Frente 3)
+    ├── serializers.py      # validação + JSON
+    ├── views.py            # CRUD - ViewSets
+    ├── urls.py             # router do DRF (registra os ViewSets)
+    ├── tests.py            # testes de API
+    └── migrations/         # 0001_initial: Categoria
 ```
+
+## Endpoints
+
+### Categoria — `/api/categorias/` (Frente 2)
+
+| Método | Rota                     | O que faz            | Status               |
+|--------|--------------------------|----------------------|----------------------|
+| GET    | `/api/categorias/`       | lista (paginada, 10) | 200                  |
+| POST   | `/api/categorias/`       | cria                 | 201 · 400            |
+| GET    | `/api/categorias/{id}/`  | detalha              | 200 · 404            |
+| PUT    | `/api/categorias/{id}/`  | substitui (completo) | 200 · 400 · 404      |
+| PATCH  | `/api/categorias/{id}/`  | altera campos soltos | 200 · 400 · 404      |
+| DELETE | `/api/categorias/{id}/`  | remove               | 204 · 404            |
+
+Corpo do POST/PUT (`descricao` é opcional; `nome` é obrigatório e único):
+
+```json
+{ "nome": "Notebooks", "descricao": "Portáteis e ultrabooks" }
+```
+
+Resposta da lista (paginação nativa do DRF, `PAGE_SIZE = 10`):
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    { "id": 1, "nome": "Notebooks", "descricao": "Portáteis e ultrabooks" }
+  ]
+}
+```
+
+### Produto — `/api/produtos/` (Frente 3)
+
+Ainda não implementado.
+
 
 ## Divisão do trabalho
 
 - **Frente 1 — Fundação/Infra:** este esqueleto (feito). Projeto, app, settings, DRF, .env, paginação.
-- **Frente 2 — Categoria:** model, ModelSerializer, ViewSet e registro no router — CRUD em `/api/categorias/`.
+- **Frente 2 — Categoria:** model, ModelSerializer, ViewSet e registro no router — CRUD em `/api/categorias/` (feito).
 - **Frente 3 — Produto:** model com `ForeignKey`, migração do relacionamento, serializer aninhado, CRUD em `/api/produtos/`.
 - **Frente 4 — Roteamento, status codes e entrega:** router geral, códigos HTTP, integridade no DELETE, coleção Postman, revisão final.
 
