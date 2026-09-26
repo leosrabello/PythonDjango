@@ -1,0 +1,15 @@
+# Ambiente
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Banco SQLite local
+db.sqlite3
+*.sqlite3
+
+# SO / editor
+.DS_Store
+.vscode/
+.idea/
